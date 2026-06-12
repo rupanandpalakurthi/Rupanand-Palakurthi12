@@ -1,0 +1,10 @@
+{
+  "name": "Remix: Remix: EduSphere AI — Learn in 3D",
+  "description": "Vibrant and interactive AI-powered learning app featuring full-screen 3D simulations, science models, logic animations, and custom AI tutor explanations.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
