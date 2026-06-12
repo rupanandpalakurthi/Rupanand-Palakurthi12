@@ -3,12 +3,25 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore, doc, getDocFromServer } from "firebase/firestore";
 import firebaseConfig from "../../firebase-applet-config.json";
 
-// Initialize Firebase app
-const app = initializeApp(firebaseConfig);
+// Resolve Firebase credentials prioritising Vercel/Vite environment variables, with fallback to the local json configuration
+const metaEnv = (import.meta as any).env || {};
+export const resolvedFirebaseConfig = {
+  projectId: (metaEnv.VITE_FIREBASE_PROJECT_ID as string) || firebaseConfig.projectId,
+  appId: (metaEnv.VITE_FIREBASE_APP_ID as string) || firebaseConfig.appId,
+  apiKey: (metaEnv.VITE_FIREBASE_API_KEY as string) || firebaseConfig.apiKey,
+  authDomain: (metaEnv.VITE_FIREBASE_AUTH_DOMAIN as string) || firebaseConfig.authDomain,
+  firestoreDatabaseId: (metaEnv.VITE_FIREBASE_FIRESTORE_DATABASE_ID as string) || firebaseConfig.firestoreDatabaseId,
+  storageBucket: (metaEnv.VITE_FIREBASE_STORAGE_BUCKET as string) || firebaseConfig.storageBucket,
+  messagingSenderId: (metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID as string) || firebaseConfig.messagingSenderId,
+  measurementId: (metaEnv.VITE_FIREBASE_MEASUREMENT_ID as string) || firebaseConfig.measurementId,
+};
+
+// Initialize Firebase app with resolved configuration
+const app = initializeApp(resolvedFirebaseConfig);
 
 // Initialize Firebase services
 export const auth = getAuth(app);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = getFirestore(app, resolvedFirebaseConfig.firestoreDatabaseId);
 
 // Test Firestore connection as required by rules guidelines
 async function testConnection() {

@@ -21,7 +21,7 @@ import { soundEngine } from "../utils/soundEngine";
 import confetti from "canvas-confetti";
 import { signInWithPopup } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { auth, googleProvider, db } from "../utils/firebase";
+import { auth, googleProvider, db, resolvedFirebaseConfig } from "../utils/firebase";
 
 interface LoginPageProps {
   onLoginSuccess: (name: string, role: string) => void;
@@ -470,18 +470,18 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                     </div>
 
                     <p className="text-white/70 text-[10.5px] leading-relaxed">
-                      This domain is not yet authorized in Firebase Console &rarr; Auth &rarr; Settings for project <code className="text-cyan-300 bg-white/5 px-1 rounded font-mono font-bold">rajuc8-b0b28</code>.
+                      This domain is not yet authorized in Firebase Console &rarr; Auth &rarr; Settings for project <code className="text-cyan-300 bg-white/5 px-1 rounded font-mono font-bold">{resolvedFirebaseConfig.projectId}</code>.
                     </p>
 
                     <ol className="list-decimal pl-4 space-y-1 text-white/80 text-[10px]">
                       <li>
-                        Go to <a href="https://console.firebase.google.com/project/rajuc8-b0b28/authentication/providers" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300 underline font-semibold transition-colors">Firebase Console Auth Settings ↗</a>
+                        Go to <a href={`https://console.firebase.google.com/project/${resolvedFirebaseConfig.projectId}/authentication/providers`} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300 underline font-semibold transition-colors">Firebase Console Auth Settings ↗</a>
                       </li>
                       <li>
                         Select the <span className="font-semibold text-white">Settings</span> tab, then click <span className="font-semibold text-white">Authorized domains</span>.
                       </li>
                       <li>
-                        Add the hostname(s) shown below:
+                        Add the hostname shown below:
                       </li>
                     </ol>
 
@@ -498,35 +498,72 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                           }}
                           className="bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/30 text-cyan-300 text-[8.5px] px-1.5 py-0.5 rounded font-mono font-bold cursor-pointer transition-colors"
                         >
-                          Copy
-                        </button>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 bg-black/40 border border-white/10 rounded-lg p-1.5 justify-between">
-                        <span className="font-mono text-[9px] text-cyan-200 select-all truncate">
-                          ais-pre-qvrkfoks5f3nyfrh6iwvnj-548525680831.asia-east1.run.app
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText("ais-pre-qvrkfoks5f3nyfrh6iwvnj-548525680831.asia-east1.run.app");
-                            alert("Copied: ais-pre-qvrkfoks5f3nyfrh6iwvnj-548525680831.asia-east1.run.app");
-                          }}
-                          className="bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/30 text-cyan-300 text-[8.5px] px-1.5 py-0.5 rounded font-mono font-bold cursor-pointer transition-colors"
-                        >
-                          Copy
+                          Copy Domain
                         </button>
                       </div>
                     </div>
 
                     <p className="text-[9px] text-white/45 italic font-mono text-center">
-                      Tip: Refresh this applet tab after saving configurations.
+                      Tip: Refresh this tab after saving configurations.
                     </p>
                   </div>
                 ) : (
-                  <p className="text-[10px] text-red-400 text-center font-mono animate-pulse">
-                    ⚠️ Connection Link: {googleError}
-                  </p>
+                  <div className="bg-slate-950/90 border border-red-500/30 rounded-xl p-3.5 space-y-3 shadow-lg text-left select-text relative overflow-hidden animate-fade-in text-xs animate-laser-pulse">
+                    <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-red-500 via-rose-500 to-red-500" />
+                    
+                    <div className="flex items-start gap-2 text-rose-300 font-bold">
+                      <ShieldAlert className="w-4 h-4 shrink-0 stroke-[2] mt-0.5 text-rose-400" />
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wide font-mono">Firebase Configuration Required</p>
+                        <p className="text-[11px] mt-0.5 text-white font-semibold">
+                          {googleError.includes("api-key-not-valid") ? "Invalid API Key Detected" : "Auth Error Encountered"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="text-white/70 text-[10px] leading-relaxed">
+                      {googleError.includes("api-key-not-valid")
+                        ? "Since you deployed to Vercel, you need to add your active Firebase environment variables in Vercel settings so auth initializes correctly."
+                        : `Vercel build reported: ${googleError}`}
+                    </p>
+
+                    <div className="space-y-2 mt-2 border-t border-white/10 pt-2.5">
+                      <p className="text-cyan-300 font-bold text-[10px] uppercase tracking-wider font-mono">
+                        Copy Vercel Env Variables:
+                      </p>
+                      <div className="bg-black/50 rounded-lg p-2 border border-white/5 space-y-1.5 font-mono text-[9px] text-slate-300 max-h-48 overflow-y-auto">
+                        {[
+                          { key: "VITE_FIREBASE_API_KEY", val: resolvedFirebaseConfig.apiKey },
+                          { key: "VITE_FIREBASE_PROJECT_ID", val: resolvedFirebaseConfig.projectId },
+                          { key: "VITE_FIREBASE_AUTH_DOMAIN", val: resolvedFirebaseConfig.authDomain },
+                          { key: "VITE_FIREBASE_APP_ID", val: resolvedFirebaseConfig.appId },
+                          { key: "VITE_FIREBASE_FIRESTORE_DATABASE_ID", val: resolvedFirebaseConfig.firestoreDatabaseId },
+                          { key: "VITE_FIREBASE_STORAGE_BUCKET", val: resolvedFirebaseConfig.storageBucket },
+                          { key: "VITE_FIREBASE_MESSAGING_SENDER_ID", val: resolvedFirebaseConfig.messagingSenderId },
+                        ].map((envItem) => (
+                          <div key={envItem.key} className="flex justify-between items-center gap-1.5 p-1 hover:bg-white/5 rounded">
+                            <span className="text-cyan-300 font-bold shrink-0 truncate max-w-[125px]" title={envItem.key}>{envItem.key}</span>
+                            <div className="flex items-center gap-1.5 truncate text-white/50">
+                              <span className="truncate max-w-[85px]" title={envItem.val}>{envItem.val}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(`${envItem.key}=${envItem.val}`);
+                                  alert(`Copied:\n${envItem.key}=${envItem.val}`);
+                                }}
+                                className="shrink-0 bg-cyan-500/10 hover:bg-cyan-500/30 border border-cyan-400/25 text-cyan-300 text-[8px] px-1 py-0.5 rounded cursor-pointer transition-colors"
+                              >
+                                Copy Pair
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-[9px] text-white/45 italic leading-relaxed">
+                        Tip: Open Vercel &rarr; Settings &rarr; Environment Variables, paste these items, and trigger a redeploy.
+                      </p>
+                    </div>
+                  </div>
                 )
               )}
             </div>
